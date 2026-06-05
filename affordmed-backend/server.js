@@ -1,27 +1,28 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
 const dotenv = require("dotenv");
-
+const connectDB = require("./controllers/config/db");
+const logger = require("./middleware/logger");
+const healthRoutes = require("./routes/healthRoutes");
 dotenv.config();
-
 const app = express();
-
-app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch((err) => console.log(err));
-
-// Test Route
-app.get("/api/test", (req, res) => {
-    res.json({ message: "API Working Successfully" });
+app.use(async (req, res, next) => {
+    await logger(
+        "backend",
+        "info",
+        "middleware",
+        `${req.method} ${req.url}`
+    );
+    next();
 });
+connectDB();
 
+app.use("/", healthRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
+
     console.log(`Server running on port ${PORT}`);
+
 });
